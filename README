@@ -22,8 +22,7 @@ protected int nextInt(long oldseed) {
 }
 
 As you probably noticed with the bitwise shift, the last 16 bits are discarded to create 
-values that more closely resemble random numbers. For example, if you started with an even 
-number, the next number would be odd and the next number after that would be even. To 
+values that more closely resemble random numbers. To 
 predict the original seed a possible solution is a brute force loop through all the possible 
 last 2^16 bits until we find the combination of numbers that matches from two consecutive 
 seeds (nextInt results).
