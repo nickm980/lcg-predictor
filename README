@@ -1,0 +1,37 @@
+Java's Random class uses a linear congruential generator which are pseudo-random and can be predicted because they are not truly random. The algorithm uses previous values to predict next pseudo-random numbers and is generated using the formula Xn+1 = (aXn+c) mod m with a, c, and m constant. The modulus keeps the next random number within bounds and the multiplier and addend generate the next number from the sequence. Internally Random uses nextseed = (oldseed * multiplier + addend) & mask where the bitwise & operator is equivalent to performing modulus 2^48 because both keep only the lower 48 bits.
+
+Basic usage of Random to generate a random number
+Random random = new Random();
+random.nextInt();
+
+The method below is the modified nextInt method from Random.java 
+(https://github.com/openjdk/jdk/blob/master/src/java.base/share/classes/java/util/Random.java#L432)
+
+protected int nextInt(long oldseed) {
+  long nextseed = (oldseed * 0x5DEECE66DL + 0xBL) & ((1L << 48) - 1);
+  return (int)(nextseed >>> 16);
+}
+
+As you probably noticed with the bitwise shift, the last 16 bits are discarded to create values that more closely resemble random numbers. For example, if you started with an even number, the next number would be odd and the next number after that would be even. To predict the original seed a possible solution is a brute force loop through all the possible last 2^16 bits until we find the combination of numbers that matches from two consecutive seeds (nextInt results).
+
+long result = 0;
+
+for (int i = 0; i < (1 << 16); i++) {
+  long nextseed = ((long) oldseed << 16) + i;
+  if (next(seed) == nextseed) {
+    res = nextseed;
+    break;
+  }
+}
+
+Now the result can be passed into Random to predict the same future values as the original Random.
+
+There's one trick for getting the seed to work because when initializing a new instance of Random the seed is XOR with the multiplier. However this can be reversed by supplying a seed that is already XOR with the multiplier.
+
+Random Initializer
+public Random(long seed) {
+  this.seed = (seed ^ multiplier) & mask;
+}
+
+So you would pass in your predicted seed like this
+new Random(seed^multiplier);
